@@ -4,29 +4,29 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
+import org.openimaj.data.dataset.VFSGroupDataset;
+import org.openimaj.data.dataset.VFSListDataset;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 
 /**
- * An abstract class for creating an image classifier that loads a list of training and
- * testing images, of which are then classified and stored into a text file
+ * An abstract class for creating an image classifier that loads a list of training and testing
+ * images, of which are then classified and stored into a text file
  */
 public abstract class ImageClassifier {
 
 	/**
-	 * List of training images
+	 * Dataset of training images
 	 */
-	protected final ArrayList<ArrayList<FImage>> trainingImages;
+	protected final VFSGroupDataset<FImage> trainingImages;
 
 	/**
-	 * List of testing images
+	 * Dataset of testing images
 	 */
-	protected final ArrayList<FImage> testingImages;
+	protected final VFSListDataset<FImage> testingImages;
 
 	/**
-	 * List of the classified test images
+	 * List of the classified testing images
 	 */
 	protected final String[] classifiedTestingImages;
 
@@ -57,44 +57,9 @@ public abstract class ImageClassifier {
 	 * @return List of training images
 	 * @throws IOException
 	 */
-	protected ArrayList<ArrayList<FImage>> loadTrainingImages(String pathToTrainingImages)
+	protected VFSGroupDataset<FImage> loadTrainingImages(String pathToTrainingImages)
 			throws IOException {
-		try {
-			//Check if the directory to training images exists
-			File trainingImagesDirectory = new File(
-					Files.createTempDirectory(pathToTrainingImages).toString());
-
-			if (!trainingImagesDirectory.isDirectory()) {
-				throw new IOException("Path to training images does not exist");
-			}
-
-			trainingImagesDirectory = new File(pathToTrainingImages);
-
-			//Get the list of folders in the training directory, and create a new arraylist to store the values
-			File[] listOfClassifiers = trainingImagesDirectory.listFiles();
-			ArrayList<ArrayList<FImage>> trainingImages = new ArrayList<>();
-
-			//For each directory in training
-			for (int i = 0; i < listOfClassifiers.length; i++) {
-
-				//Get the list of files in each directory
-				File[] listOfImages = listOfClassifiers[i].listFiles();
-				ArrayList<FImage> images = new ArrayList<>();
-
-				//For each file in each sub-directory
-				for (int j = 0; j < listOfImages.length; i++) {
-
-					//Read the image and add it to the list of training images
-					images.add(ImageUtilities.readF(listOfImages[j]));
-				}
-				trainingImages.add(images);
-			}
-
-			return trainingImages;
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw e;
-		}
+		return new VFSGroupDataset<>(pathToTrainingImages, ImageUtilities.FIMAGE_READER);
 	}
 
 	/**
@@ -104,34 +69,8 @@ public abstract class ImageClassifier {
 	 * @return List of testing images
 	 * @throws IOException
 	 */
-	protected ArrayList<FImage> loadTestImages(String pathToTestingImages) throws IOException {
-		try {
-			//Check if the directory to testing images exists
-			File testingImagesDirectory = new File(
-					Files.createTempDirectory(pathToTestingImages).toString());
-
-			if (!testingImagesDirectory.isDirectory()) {
-				throw new IOException("Path to testing images does not exist");
-			}
-
-			testingImagesDirectory = new File(pathToTestingImages);
-
-			//Get the list of images in the testing directory, and create a new arraylist to store the values
-			File[] listOfImages = testingImagesDirectory.listFiles();
-			ArrayList<FImage> testingImages = new ArrayList<>();
-
-			//For each image in testing
-			for (int i = 0; i < listOfImages.length; i++) {
-
-				//Read the image and add it to the list of testing images
-				testingImages.add(ImageUtilities.readF(listOfImages[i]));
-			}
-
-			return testingImages;
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw e;
-		}
+	protected VFSListDataset<FImage> loadTestImages(String pathToTestingImages) throws IOException {
+		return new VFSListDataset<>(pathToTestingImages, ImageUtilities.FIMAGE_READER);
 	}
 
 	/**
@@ -152,7 +91,7 @@ public abstract class ImageClassifier {
 		}
 
 		try {
-			//Create the run number fule
+			//Create the run number file
 			File file = new File(runNumber);
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 
@@ -170,7 +109,6 @@ public abstract class ImageClassifier {
 			throw new IOException("Error in creating or reading the run file");
 		}
 	}
-
 
 	/**
 	 * Used to classify an image
