@@ -10,25 +10,20 @@ import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 
 /**
- * An abstract class for creating an image classifier that loads a list of training and testing
- * images, of which are then classified and stored into a text file
+ * A class that loads a list of training and testing images. The training data is used to train each
+ * classifier, where we then classify the testing images, of which the output is saved to a txt file
  */
-public abstract class ImageClassifier {
+public class ImageClassifier {
 
 	/**
-	 * Dataset of training images
+	 * Dataset of training image
 	 */
-	protected final VFSGroupDataset<FImage> trainingImages;
+	private final VFSGroupDataset<FImage> trainingImages;
 
 	/**
 	 * Dataset of testing images
 	 */
-	protected final VFSListDataset<FImage> testingImages;
-
-	/**
-	 * List of the classified testing images
-	 */
-	protected final String[] classifiedTestingImages;
+	private final VFSListDataset<FImage> testingImages;
 
 	/**
 	 * Loads a list of training and testing images, classifies the images and outputs the result to
@@ -40,24 +35,22 @@ public abstract class ImageClassifier {
 	 */
 	public ImageClassifier(String pathToTestingImages, String pathToTrainingImages)
 			throws IOException {
-		this.trainingImages = loadTrainingImages(pathToTestingImages);
-		this.testingImages = loadTestImages(pathToTrainingImages);
-		this.classifiedTestingImages = new String[testingImages.size()];
+		this.trainingImages = loadTrainingImages(pathToTrainingImages);
+		this.testingImages = loadTestingImages(pathToTestingImages);
 
 		classifyImages();
-		writePredictedImages();
 	}
 
 	/**
 	 * Load the list of training images in the training folder. The order of which goes as follows:
-	 *     bedroom - cost - forest - highway - industrial - insidecity - kitchen - living room -
-	 *     mountain - office - opencountry - store - street - suburb - tallbuilding
+	 * bedroom - cost - forest - highway - industrial - insidecity - kitchen - living room -
+	 * mountain - office - opencountry - store - street - suburb - tallbuilding
 	 *
 	 * @param pathToTrainingImages Path to the training images folder
 	 * @return List of training images
 	 * @throws IOException
 	 */
-	protected VFSGroupDataset<FImage> loadTrainingImages(String pathToTrainingImages)
+	private VFSGroupDataset<FImage> loadTrainingImages(String pathToTrainingImages)
 			throws IOException {
 		return new VFSGroupDataset<>(pathToTrainingImages, ImageUtilities.FIMAGE_READER);
 	}
@@ -69,7 +62,8 @@ public abstract class ImageClassifier {
 	 * @return List of testing images
 	 * @throws IOException
 	 */
-	protected VFSListDataset<FImage> loadTestImages(String pathToTestingImages) throws IOException {
+	private VFSListDataset<FImage> loadTestingImages(String pathToTestingImages)
+			throws IOException {
 		return new VFSListDataset<>(pathToTestingImages, ImageUtilities.FIMAGE_READER);
 	}
 
@@ -78,18 +72,8 @@ public abstract class ImageClassifier {
 	 *
 	 * @throws IOException
 	 */
-	protected void writePredictedImages() throws IOException {
-		String runNumber;
-
-		//Get the run number for each class (it's a dumb way to do it but make's my life simpler)
-		if (this instanceof KNearestNeighbourClassifier) {
-			runNumber = "run1.txt";
-		} else if (this instanceof LinearClassifier) {
-			runNumber = "run2.txt";
-		} else {
-			runNumber = "run3.txt";
-		}
-
+	private void writePredictedImages(String runNumber, String[] classifiedTestingImages)
+			throws IOException {
 		try {
 			//Create the run number file
 			File file = new File(runNumber);
@@ -111,8 +95,16 @@ public abstract class ImageClassifier {
 	}
 
 	/**
-	 * Used to classify an image
+	 * Used to classify the test images
 	 */
-	protected abstract void classifyImages();
+	private void classifyImages() {
+		//Run KNearestNeighbour Classifier
+		//Run Linear Classifier
+		//Run 3rd Classifier
+
+		//writePredictedImages("run1.txt", KNearestNeighbour Data);
+		//writePredictedImages("run2.txt", Linear Data);
+		//writePredictedImages("run3.txt", 3rd Data);
+	}
 
 }
