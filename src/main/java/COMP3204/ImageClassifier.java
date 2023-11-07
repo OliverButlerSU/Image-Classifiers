@@ -1,13 +1,17 @@
 package COMP3204;
 
+import COMP3204.KNN.KNearestNeighbourClassifier;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
+import org.openimaj.ml.annotation.Annotator;
+import org.openimaj.ml.annotation.ScoredAnnotation;
 
 /**
  * A class that loads a list of training and testing images. The training data is used to train each
@@ -37,8 +41,6 @@ public class ImageClassifier {
 			throws IOException {
 		this.trainingImages = loadTrainingImages(pathToTrainingImages);
 		this.testingImages = loadTestingImages(pathToTestingImages);
-
-		classifyImages();
 	}
 
 	/**
@@ -72,7 +74,7 @@ public class ImageClassifier {
 	 *
 	 * @throws IOException
 	 */
-	private void writePredictedImages(String runNumber, String[] classifiedTestingImages)
+	private void writePredictedImages(String runNumber, String[][] classifiedTestingImages)
 			throws IOException {
 		try {
 			//Create the run number file
@@ -81,7 +83,7 @@ public class ImageClassifier {
 
 			//Write the list of classified test images with the name of the image, and it's predicted class
 			for (int i = 0; i < classifiedTestingImages.length; i++) {
-				String line = i + ".jpg " + classifiedTestingImages[i];
+				String line = classifiedTestingImages[i][0] + " " + classifiedTestingImages[i][1];
 				writer.write(line);
 				writer.newLine();
 			}
@@ -95,16 +97,48 @@ public class ImageClassifier {
 	}
 
 	/**
-	 * Used to classify the test images
+	 * Used to create, train and run each classifier against the testing images
+	 * @throws IOException
 	 */
-	private void classifyImages() {
+	public void classifyImages() throws IOException {
 		//Run KNearestNeighbour Classifier
-		//Run Linear Classifier
-		//Run 3rd Classifier
+		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages);
+		String[][] classifications = annotateTestImages(testingImages, knn.getAnnotator());
+		writePredictedImages("run1.txt", classifications);
 
-		//writePredictedImages("run1.txt", KNearestNeighbour Data);
-		//writePredictedImages("run2.txt", Linear Data);
-		//writePredictedImages("run3.txt", 3rd Data);
+		//Run Linear Classifier
+		//LinearClassifier lc = new LinearClassifier(trainingImages);
+		//String[][] classifications2 = classifyTestImages(testingImages, lc.getAnnotator());
+		//writePredictedImages("run2.txt", classifications2);
+
+
+		//Run 3rd Classifier
 	}
 
+	private String[][] annotateTestImages(VFSListDataset<FImage> testImages, Annotator classifier){
+		String[][] classifications = new String[testImages.size()][2];
+
+		int i = 0;
+		for (FImage image: testImages) {
+
+			List<ScoredAnnotation> scores = classifier.annotate(image);
+			String annotation = "";
+			double prediction = 0;
+
+			for(ScoredAnnotation score : scores){
+				if(score.confidence > prediction){
+					prediction = score.confidence;
+					annotation = score.annotation.toString();
+				}
+			}
+
+			String name = testImages.getFileObject(i).getName().getBaseName();
+			String[] values = new String[] {name, annotation};
+
+			classifications[i] = values;
+			i++;
+		}
+
+		return classifications;
+	}
 }
