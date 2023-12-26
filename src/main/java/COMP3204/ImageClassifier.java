@@ -1,6 +1,7 @@
 package COMP3204;
 
 import COMP3204.KNN.KNearestNeighbourClassifier;
+import COMP3204.Linear.LinearClassifier;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -102,14 +103,14 @@ public class ImageClassifier {
 	 */
 	public void classifyImages() throws IOException {
 		//Run KNearestNeighbour Classifier
-		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages);
-		String[][] classifications = annotateTestImages(testingImages, knn.getAnnotator());
-		writePredictedImages("run1.txt", classifications);
+//		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages);
+//		String[][] classifications = annotateTestImages(testingImages, knn.getAnnotator());
+//		writePredictedImages("run1.txt", classifications);
 
 		//Run Linear Classifier
-		//LinearClassifier lc = new LinearClassifier(trainingImages);
-		//String[][] classifications2 = classifyTestImages(testingImages, lc.getAnnotator());
-		//writePredictedImages("run2.txt", classifications2);
+		LinearClassifier lc = new LinearClassifier(trainingImages);
+		String[][] classifications2 = annotateTestImages(testingImages, lc.getAnnotator());
+		writePredictedImages("run2.txt", classifications2);
 
 
 		//Run 3rd Classifier
@@ -120,6 +121,9 @@ public class ImageClassifier {
 
 		int i = 0;
 		for (FImage image: testImages) {
+			if(i%100 ==0){
+				System.out.println(i);
+			}
 
 			List<ScoredAnnotation> scores = classifier.annotate(image);
 			String annotation = "";

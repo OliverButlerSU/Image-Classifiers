@@ -3,14 +3,20 @@ package COMP3204.Linear;
 import org.openimaj.feature.DoubleFV;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.image.FImage;
+import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
+import org.openimaj.ml.clustering.assignment.HardAssigner;
+import org.openimaj.util.pair.IntFloatPair;
 
 public class BOVWFeatureExtractor implements FeatureExtractor<DoubleFV, FImage> {
 
+	HardAssigner<byte[], float[], IntFloatPair> assigner;
+
+	public BOVWFeatureExtractor(HardAssigner<byte[], float[], IntFloatPair> assigner){
+		this.assigner = assigner;
+	}
+
 	@Override
 	public DoubleFV extractFeature(FImage image) {
-		//8x8 patches, sampled every 4 pixels in x and y direction. Cluster using K-Means to learn vocab (500 clusters to start)
-		//Consider using Mean centered and normalising each patch before clustering/quantisation.
-
-		return new DoubleFV(image.getDoublePixelVector());
+		return new BagOfVisualWords<>(assigner).aggregateVectorsRaw(DSPPExtractor.extractDSPP(image)).asDoubleFV();
 	}
 }

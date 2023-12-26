@@ -16,7 +16,6 @@ public class KNearestNeighbourClassifier{
 	private final KNNAnnotator annotator;
 
 	public KNearestNeighbourClassifier(VFSGroupDataset trainingImages) {
-
 		//Test to maybe use either EUCLIEAN, MANHATTEN? Not sure which to use but EUCLIDEAN SEEMS BEST?
 		//N = sqrt(number of data points in training data?) (should be odd)
 		//15 classifiers x 100 data points = 1500  sqrt(1500) = 38.7 (we will round up)
