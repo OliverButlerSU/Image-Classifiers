@@ -132,7 +132,7 @@ public class ImageClassifier {
 
         int i = 0;
         for (FImage image : testImages) {
-            if (i++ % 100 == 0) {
+            if (i % 100 == 0) {
                 System.out.println("Completed " + i + "/" + testImages.size() + " classifications");
             }
 
@@ -154,6 +154,7 @@ public class ImageClassifier {
             String[] values = new String[]{name, annotation};
 
             classifications[i] = values;
+            i++;
         }
 
         return classifications;
