@@ -12,25 +12,31 @@ import org.openimaj.image.processing.resize.ResizeProcessor;
  */
 public class TinyImageFeatureExtractor implements FeatureExtractor<DoubleFV, FImage> {
 
-	/**
-	 * Used to change the resolution of the image
-	 */
-	static final int IMAGE_RESOLUTION = 16;
+    /**
+     * Resolution of the image that it is scaled to
+     */
+    static final int IMAGE_RESOLUTION = 16;
 
-	@Override
-	public DoubleFV extractFeature(FImage image) {
-		//Crop image to be square
-		int getLowestSize = Math.min(image.height, image.width);
-		FImage croppedImage = image.extractCenter(getLowestSize, getLowestSize);
+    /**
+     * Extract features of an image
+     *
+     * @param image Input image
+     * @return A Double Float Vector that represents the image's features
+     */
+    @Override
+    public DoubleFV extractFeature(FImage image) {
+        //Crop image to be square
+        int getLowestSize = Math.min(image.height, image.width);
+        FImage croppedImage = image.extractCenter(getLowestSize, getLowestSize);
 
-		//Scale image(16x16)
-		FImage scaledImage = croppedImage.processInplace(new ResizeProcessor(IMAGE_RESOLUTION, IMAGE_RESOLUTION));
+        //Scale image(16x16)
+        FImage scaledImage = croppedImage.processInplace(new ResizeProcessor(IMAGE_RESOLUTION, IMAGE_RESOLUTION));
 
-		//Apply zero mean and unit length
-		scaledImage.pixels = ZeroMeanUnitVarianceImage.zeroMean(scaledImage.pixels); //Does this even make it better?
-		scaledImage.pixels = ZeroMeanUnitVarianceImage.unitVariance(scaledImage.pixels); //Does this even make it better?
+        //Apply zero mean and unit length
+        scaledImage.pixels = ZeroMeanUnitVarianceImage.zeroMean(scaledImage.pixels); //Does this even make it better?
+        scaledImage.pixels = ZeroMeanUnitVarianceImage.unitVariance(scaledImage.pixels); //Does this even make it better?
 
-		//Flatten image into a Double Pixel Vector
-		return new DoubleFV(scaledImage.getDoublePixelVector());
-	}
+        //Flatten image into a Double Pixel Vector
+        return new DoubleFV(scaledImage.getDoublePixelVector());
+    }
 }

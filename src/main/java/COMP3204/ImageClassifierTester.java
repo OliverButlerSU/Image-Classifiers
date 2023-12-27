@@ -5,8 +5,8 @@ public class ImageClassifierTester {
 
 	public static void main(String[] args){
 		try{
-			String test = "C:\\Users\\Windows\\Documents\\Uni Work\\Computer Vision\\comp3204-cw2\\testing";
-			String train = "C:\\Users\\Windows\\Documents\\Uni Work\\Computer Vision\\comp3204-cw2\\training";
+			String test = "C:\\Users\\olive\\OneDrive\\Documents\\Uni work\\comp3204-cw2\\testing";
+			String train = "C:\\Users\\olive\\OneDrive\\Documents\\Uni work\\comp3204-cw2\\training";
 
 			ImageClassifier ic = new ImageClassifier(test , train);
 			ic.classifyImages();

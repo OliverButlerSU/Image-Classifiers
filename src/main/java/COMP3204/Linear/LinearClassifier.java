@@ -1,8 +1,10 @@
 package COMP3204.Linear;
 
 import de.bwaldvogel.liblinear.SolverType;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.openimaj.data.dataset.Dataset;
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.experiment.dataset.sampling.StratifiedGroupedUniformRandomisedSampler;
@@ -15,47 +17,62 @@ import org.openimaj.ml.clustering.kmeans.ByteKMeans;
 import org.openimaj.util.pair.IntFloatPair;
 
 /**
- * A Linear Classifier using a bag-of-visual-words feature based on fixed size densely-sampled pixel
- * patches
+ * A 15v1 Multi Class Linear Classifier using bag-of-visual-words clustered with K-Means using a feature extractor based on fixed size densely-sampled pixel patches
  */
 public class LinearClassifier {
 
-	private final LiblinearAnnotator annotator;
-	private final int clusterSize = 500;
+    /**
+     * Annotator to classify images
+     */
+    private final LiblinearAnnotator annotator;
 
-	public LinearClassifier(VFSGroupDataset trainingImages) {
-		System.out.println("Training Quantiser");
-		HardAssigner<byte[], float[], IntFloatPair> assigner = trainQuantiser(
-				new StratifiedGroupedUniformRandomisedSampler(0.2).sample(trainingImages));
+    /**
+     * Size of KMeans cluster
+     */
+    private final int clusterSize = 1500;
 
-		System.out.println("Creating Liblinear annotator");
-		annotator = new LiblinearAnnotator<FImage, String>(new BOVWFeatureExtractor(assigner),
-				Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.0001);
+    public LinearClassifier(VFSGroupDataset trainingImages) {
 
-		System.out.println("Training annotator");
-		annotator.train(trainingImages);
-	}
+        System.out.println("Training KMeans Quantiser");
+        HardAssigner<byte[], float[], IntFloatPair> assigner = trainQuantiser(
+                new StratifiedGroupedUniformRandomisedSampler(0.2).sample(trainingImages));
+        
+        annotator = new LiblinearAnnotator<FImage, String>(new BOVWFeatureExtractor(assigner),
+                Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.0001);
 
-	private HardAssigner<byte[],float[], IntFloatPair> trainQuantiser(Dataset<FImage> sample) {
-		List<byte[]> allkeys = new ArrayList<>();
+        System.out.println("Training annotator");
+        annotator.train(trainingImages);
+    }
 
-		int i = 0;
-		for (FImage rec : sample) {
-			System.out.println(i++ + "/" + sample.numInstances() + " extracted DSPP");
-			allkeys.addAll(DSPPExtractor.extractDSPP(rec));
-		}
+    /**
+     * Train a Quantiser using KMeans
+     *
+     * @param sample Sample of data to train the Quantiser
+     * @return HardAssigner
+     */
+    private HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(Dataset<FImage> sample) {
+        List<byte[]> allkeys = new ArrayList<>();
 
-		System.out.println("Creating KD Tree Ensemble");
-		ByteKMeans km = ByteKMeans.createKDTreeEnsemble(clusterSize);
-		byte[][] datasource = allkeys.toArray(new byte[0][]);
-		System.out.println("Clustering data");
-		ByteCentroidsResult result = km.cluster(datasource);
-		System.out.println("Returning hard assigner");
-		return result.defaultHardAssigner();
+        for (FImage rec : sample) {
+            allkeys.addAll(DSPPExtractor.extractDSPP(rec));
+        }
 
-	}
+        System.out.println("Creating KD Tree Ensemble");
+        ByteKMeans km = ByteKMeans.createKDTreeEnsemble(clusterSize);
 
-	public LiblinearAnnotator getAnnotator(){
-		return annotator;
-	}
+        System.out.println("Clustering data");
+        byte[][] datasource = allkeys.toArray(new byte[0][]);
+        ByteCentroidsResult result = km.cluster(datasource);
+        return result.defaultHardAssigner();
+
+    }
+
+    /**
+     * Getter for annotator
+     *
+     * @return annotator
+     */
+    public LiblinearAnnotator getAnnotator() {
+        return annotator;
+    }
 }
