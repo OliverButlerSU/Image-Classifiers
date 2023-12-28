@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.data.dataset.Dataset;
-import org.openimaj.data.dataset.VFSGroupDataset;
+import org.openimaj.data.dataset.GroupedDataset;
 import org.openimaj.experiment.dataset.sampling.StratifiedGroupedUniformRandomisedSampler;
 import org.openimaj.image.FImage;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
@@ -29,18 +29,17 @@ public class LinearClassifier {
     /**
      * Size of KMeans cluster
      */
-    private final int clusterSize = 1500;
+    private final int clusterSize;
 
-    public LinearClassifier(VFSGroupDataset trainingImages) {
+    public LinearClassifier(GroupedDataset trainingImages, int clusterSize) {
+        this.clusterSize = clusterSize;
 
-        System.out.println("Training KMeans Quantiser");
         HardAssigner<byte[], float[], IntFloatPair> assigner = trainQuantiser(
                 new StratifiedGroupedUniformRandomisedSampler(0.2).sample(trainingImages));
-        
+
         annotator = new LiblinearAnnotator<FImage, String>(new BOVWFeatureExtractor(assigner),
                 Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.0001);
 
-        System.out.println("Training annotator");
         annotator.train(trainingImages);
     }
 
@@ -57,10 +56,8 @@ public class LinearClassifier {
             allkeys.addAll(DSPPExtractor.extractDSPP(rec));
         }
 
-        System.out.println("Creating KD Tree Ensemble");
         ByteKMeans km = ByteKMeans.createKDTreeEnsemble(clusterSize);
 
-        System.out.println("Clustering data");
         byte[][] datasource = allkeys.toArray(new byte[0][]);
         ByteCentroidsResult result = km.cluster(datasource);
         return result.defaultHardAssigner();

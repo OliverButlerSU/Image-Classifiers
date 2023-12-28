@@ -33,8 +33,7 @@ public class TinyImageFeatureExtractor implements FeatureExtractor<DoubleFV, FIm
         FImage scaledImage = croppedImage.processInplace(new ResizeProcessor(IMAGE_RESOLUTION, IMAGE_RESOLUTION));
 
         //Apply zero mean and unit length
-        scaledImage.pixels = ZeroMeanUnitVarianceImage.zeroMean(scaledImage.pixels); //Does this even make it better?
-        scaledImage.pixels = ZeroMeanUnitVarianceImage.unitVariance(scaledImage.pixels); //Does this even make it better?
+        scaledImage.pixels = ZeroMeanUnitVarianceImage.zeroMeanUnitVariance(scaledImage.pixels);
 
         //Flatten image into a Double Pixel Vector
         return new DoubleFV(scaledImage.getDoublePixelVector());

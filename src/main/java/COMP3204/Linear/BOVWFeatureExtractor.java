@@ -12,10 +12,7 @@ import org.openimaj.util.pair.IntFloatPair;
  */
 public class BOVWFeatureExtractor implements FeatureExtractor<DoubleFV, FImage> {
 
-    /**
-     * KMeans hard assigner
-     */
-    HardAssigner<byte[], float[], IntFloatPair> assigner;
+    public BagOfVisualWords bovw;
 
     /**
      * Initializer for BOVW class
@@ -23,7 +20,7 @@ public class BOVWFeatureExtractor implements FeatureExtractor<DoubleFV, FImage> 
      * @param assigner KMeans hard assigner
      */
     public BOVWFeatureExtractor(HardAssigner<byte[], float[], IntFloatPair> assigner) {
-        this.assigner = assigner;
+        this.bovw = new BagOfVisualWords<>(assigner);
     }
 
     /**
@@ -34,6 +31,6 @@ public class BOVWFeatureExtractor implements FeatureExtractor<DoubleFV, FImage> 
      */
     @Override
     public DoubleFV extractFeature(FImage image) {
-        return new BagOfVisualWords<>(assigner).aggregateVectorsRaw(DSPPExtractor.extractDSPP(image)).asDoubleFV();
+        return bovw.aggregateVectorsRaw(DSPPExtractor.extractDSPP(image)).asDoubleFV();
     }
 }

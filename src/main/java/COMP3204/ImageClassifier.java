@@ -3,14 +3,18 @@ package COMP3204;
 import COMP3204.KNN.KNearestNeighbourClassifier;
 import COMP3204.Linear.LinearClassifier;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.data.dataset.VFSListDataset;
+import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
+import org.openimaj.experiment.evaluation.classification.ClassificationEvaluator;
+import org.openimaj.experiment.evaluation.classification.ClassificationResult;
+import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMAnalyser;
+import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMResult;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.ml.annotation.Annotator;
@@ -108,16 +112,108 @@ public class ImageClassifier {
      */
     public void classifyImages() throws IOException {
         //Run KNearestNeighbour Classifier
-//      System.out.println("Running KNN classifier");
-//		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages);
-//		String[][] classifications = annotateTestImages(testingImages, knn.getAnnotator());
-//		writePredictedImages("run1.txt", classifications);
+      System.out.println("Running KNN classifier");
+		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages, 39);
+		String[][] classifications = annotateTestImages(testingImages, knn.getAnnotator());
+		writePredictedImages("run1.txt", classifications);
 
         //Run Linear Classifier
         System.out.println("Running linear classifier");
-        LinearClassifier lc = new LinearClassifier(trainingImages);
+        LinearClassifier lc = new LinearClassifier(trainingImages, 1500);
         String[][] classifications2 = annotateTestImages(testingImages, lc.getAnnotator());
         writePredictedImages("run2.txt", classifications2);
+    }
+
+    public void evaluateLinearClassifier() {
+        GroupedRandomSplitter<String, FImage> splits =
+                new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
+
+        LinearClassifier lc = new LinearClassifier(splits.getTrainingDataset(), 1500);
+
+        ClassificationEvaluator<CMResult<String>, String, FImage> eval =
+                new ClassificationEvaluator<>(
+                        lc.getAnnotator(), splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
+
+        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
+        CMResult<String> result = eval.analyse(guesses);
+        System.out.println(result.getDetailReport());
+    }
+
+    public void evaluateKNNClassifier() {
+        GroupedRandomSplitter<String, FImage> splits =
+                new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
+
+        KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(splits.getTrainingDataset(), 39);
+
+        ClassificationEvaluator<CMResult<String>, String, FImage> eval =
+                new ClassificationEvaluator<>(
+                        knn.getAnnotator(), splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
+
+        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
+        CMResult<String> result = eval.analyse(guesses);
+        System.out.println(result.getDetailReport());
+    }
+
+    public void evaluateKNNClassifierWithDifferentValues() throws IOException {
+        GroupedRandomSplitter<String, FImage> splits =
+                new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
+
+        List<Float> accVals = new ArrayList<>();
+
+        for(int i = 1; i < 51; i++){
+            Float accuracy = 0.0f;
+            for(int j = 0; j < 50; j++){
+                KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(splits.getTrainingDataset(),  i);
+
+                ClassificationEvaluator<CMResult<String>, String, FImage> eval =
+                        new ClassificationEvaluator<>(
+                                knn.getAnnotator(), splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
+
+                Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
+                CMResult<String> result = eval.analyse(guesses);
+                accuracy+= Float.parseFloat(result.getSummaryReport().replaceAll("\n", " ").split(" ")[3]);
+            }
+            accuracy/=50;
+            System.out.println(accuracy + " " + i);
+            accVals.add(accuracy);
+        }
+
+        FileWriter fileWriter = new FileWriter("run1Acc.txt");
+        for (Float str : accVals) {
+            fileWriter.write(str.toString() + System.lineSeparator());
+        }
+        fileWriter.close();
+    }
+
+    public void evaluateLinearClassifierWithDifferentValues() throws IOException {
+        GroupedRandomSplitter<String, FImage> splits =
+                new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
+
+        List<Float> accVals = new ArrayList<>();
+
+        for(int i = 100; i < 2001; i+=100){
+            Float accuracy = 0.0f;
+            for(int j = 0; j < 2; j++){
+                LinearClassifier lc = new LinearClassifier(splits.getTrainingDataset(),  i);
+
+                ClassificationEvaluator<CMResult<String>, String, FImage> eval =
+                        new ClassificationEvaluator<>(
+                                lc.getAnnotator(), splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
+
+                Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
+                CMResult<String> result = eval.analyse(guesses);
+                accuracy+= Float.parseFloat(result.getSummaryReport().replaceAll("\n", " ").split(" ")[3]);
+            }
+            accuracy/=2;
+            System.out.println(accuracy + " " + i);
+            accVals.add(accuracy);
+
+            FileWriter fileWriter = new FileWriter("run2Acc.txt");
+            for (Float str : accVals) {
+                fileWriter.write(str.toString() + System.lineSeparator());
+            }
+            fileWriter.close();
+        }
     }
 
     /**

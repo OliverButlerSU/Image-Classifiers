@@ -9,7 +9,9 @@ public class ImageClassifierTester {
 			String train = "C:\\Users\\olive\\OneDrive\\Documents\\Uni work\\comp3204-cw2\\training";
 
 			ImageClassifier ic = new ImageClassifier(test , train);
-			ic.classifyImages();
+			ic.evaluateLinearClassifierWithDifferentValues();
+//			ic.evaluateLinearClassifier();
+//			ic.classifyImages();
 
 		} catch (Exception e){
 			e.printStackTrace();
