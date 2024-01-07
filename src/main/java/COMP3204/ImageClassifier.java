@@ -205,7 +205,7 @@ public class ImageClassifier {
     }
 
     /**
-     * Evaluate the KNN classifier using an 80:20 split of the dataset with different cluster sizes
+     * Evaluate the linear classifier using an 80:20 split of the dataset with different cluster sizes
      */
     public void evaluateLinearClassifierWithDifferentValues() throws IOException {
         //Split training images into 80:20
@@ -254,9 +254,6 @@ public class ImageClassifier {
 
         int i = 0;
         for (FImage image : testImages) {
-            if (i % 100 == 0) {
-                System.out.println("Completed " + i + "/" + testImages.size() + " classifications");
-            }
 
             //Annotate the image
             List<ScoredAnnotation> scores = classifier.annotate(image);
