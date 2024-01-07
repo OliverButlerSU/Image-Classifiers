@@ -112,24 +112,29 @@ public class ImageClassifier {
      */
     public void classifyImages() throws IOException {
         //Run KNearestNeighbour Classifier
-      System.out.println("Running KNN classifier");
-		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages, 39);
+        System.out.println("Running KNN classifier");
+		KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(trainingImages, 16);
 		String[][] classifications = annotateTestImages(testingImages, knn.getAnnotator());
 		writePredictedImages("run1.txt", classifications);
 
         //Run Linear Classifier
         System.out.println("Running linear classifier");
-        LinearClassifier lc = new LinearClassifier(trainingImages, 1500);
+        LinearClassifier lc = new LinearClassifier(trainingImages, 1700);
         String[][] classifications2 = annotateTestImages(testingImages, lc.getAnnotator());
         writePredictedImages("run2.txt", classifications2);
     }
 
+    /**
+     * Evaluate the linear classifier using an 80:20 split of the dataset
+     */
     public void evaluateLinearClassifier() {
+        //Split training images into 80:20
         GroupedRandomSplitter<String, FImage> splits =
                 new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
 
-        LinearClassifier lc = new LinearClassifier(splits.getTrainingDataset(), 1500);
+        LinearClassifier lc = new LinearClassifier(splits.getTrainingDataset(), 1700);
 
+        //Evaluate the linear classifier and output the full detail report (confusion matrix, accuracy etc.)
         ClassificationEvaluator<CMResult<String>, String, FImage> eval =
                 new ClassificationEvaluator<>(
                         lc.getAnnotator(), splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
@@ -139,12 +144,18 @@ public class ImageClassifier {
         System.out.println(result.getDetailReport());
     }
 
+    /**
+     * Evaluate the knn classifier using an 80:20 split of the dataset
+     */
     public void evaluateKNNClassifier() {
+        //Split training images into 80:20
         GroupedRandomSplitter<String, FImage> splits =
                 new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
 
-        KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(splits.getTrainingDataset(), 39);
 
+        KNearestNeighbourClassifier knn = new KNearestNeighbourClassifier(splits.getTrainingDataset(), 16);
+
+        //Evaluate the knn classifier and output the full detail report (confusion matrix, accuracy etc.)
         ClassificationEvaluator<CMResult<String>, String, FImage> eval =
                 new ClassificationEvaluator<>(
                         knn.getAnnotator(), splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
@@ -154,12 +165,18 @@ public class ImageClassifier {
         System.out.println(result.getDetailReport());
     }
 
+    /**
+     * Evaluate the KNN classifier using an 80:20 split of the dataset with different k values
+     */
     public void evaluateKNNClassifierWithDifferentValues() throws IOException {
+        //Split training images into 80:20
         GroupedRandomSplitter<String, FImage> splits =
                 new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
 
+
         List<Float> accVals = new ArrayList<>();
 
+        //Test the KKN classifier with a K value between 1-50, over 50 iterations
         for(int i = 1; i < 51; i++){
             Float accuracy = 0.0f;
             for(int j = 0; j < 50; j++){
@@ -171,6 +188,7 @@ public class ImageClassifier {
 
                 Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
                 CMResult<String> result = eval.analyse(guesses);
+                //Get the accuracy
                 accuracy+= Float.parseFloat(result.getSummaryReport().replaceAll("\n", " ").split(" ")[3]);
             }
             accuracy/=50;
@@ -178,6 +196,7 @@ public class ImageClassifier {
             accVals.add(accuracy);
         }
 
+        //Write the accuracy to a file
         FileWriter fileWriter = new FileWriter("run1Acc.txt");
         for (Float str : accVals) {
             fileWriter.write(str.toString() + System.lineSeparator());
@@ -185,12 +204,17 @@ public class ImageClassifier {
         fileWriter.close();
     }
 
+    /**
+     * Evaluate the KNN classifier using an 80:20 split of the dataset with different cluster sizes
+     */
     public void evaluateLinearClassifierWithDifferentValues() throws IOException {
+        //Split training images into 80:20
         GroupedRandomSplitter<String, FImage> splits =
                 new GroupedRandomSplitter<>(trainingImages, 80, 0, 20);
 
         List<Float> accVals = new ArrayList<>();
 
+        //Test the linear classifier with a cluster value between 100-2000, over 2 iterations
         for(int i = 100; i < 2001; i+=100){
             Float accuracy = 0.0f;
             for(int j = 0; j < 2; j++){
@@ -202,12 +226,14 @@ public class ImageClassifier {
 
                 Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
                 CMResult<String> result = eval.analyse(guesses);
+                //Get the accuracy
                 accuracy+= Float.parseFloat(result.getSummaryReport().replaceAll("\n", " ").split(" ")[3]);
             }
             accuracy/=2;
             System.out.println(accuracy + " " + i);
             accVals.add(accuracy);
 
+            //Write the accuracy to a file
             FileWriter fileWriter = new FileWriter("run2Acc.txt");
             for (Float str : accVals) {
                 fileWriter.write(str.toString() + System.lineSeparator());
